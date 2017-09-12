@@ -15,15 +15,17 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class GameOfLife {
 	private final static String NAME_OF_GAME = "Игра 'Жизнь'. Симоненко И.К., 443 группа.";
 	private final static int START_LOCATION = 200;
-	private final static int LIFE_SIZE = 50;
+	private final static int LIFE_SIZE = 5;
 	private final static int POINT_RADIUS = 10;
-	private final static int FIELD_SIZE = (LIFE_SIZE + 1) * POINT_RADIUS;
-	private final static int BTN_PANEL_HEIGHT = 58;
+	private final static int FIELD_SIZE = 500;
+	private final static int BTN_PANEL_HEIGHT = 62;
+	private static boolean[][] prevGeneration = new boolean[LIFE_SIZE][LIFE_SIZE];
 	private static boolean[][] lifeGeneration = new boolean[LIFE_SIZE][LIFE_SIZE];
 	private static boolean[][] nextGeneration = new boolean[LIFE_SIZE][LIFE_SIZE];
 	private static boolean goNextGeneration = false;
@@ -75,7 +77,17 @@ public class GameOfLife {
  
         canvasPanel = new Canvas();
         canvasPanel.setBackground(Color.white);
- 
+        canvasPanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                int x = e.getX() / POINT_RADIUS;
+                int y = e.getY() / POINT_RADIUS;
+                lifeGeneration[x][y] = !lifeGeneration[x][y];
+                canvasPanel.repaint();
+            }
+        });
+        
         JButton fillButton = new JButton("Заполнить");
         fillButton.addActionListener(new FillButtonListener());
  
@@ -91,7 +103,7 @@ public class GameOfLife {
         goButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 goNextGeneration = !goNextGeneration;
-                goButton.setText(goNextGeneration ? "Стоп" : "Пуск");
+                goButton.setText(goNextGeneration ? "Пауза" : "Пуск");
             }
         });
         
@@ -137,7 +149,43 @@ public class GameOfLife {
         }
         return count;
     }
- 
+	
+	private static boolean endOfGame() {
+		boolean ended = false, stat = false, cycle = false;
+        for (int x = 0; x < LIFE_SIZE; x++) {
+           if (Arrays.equals(lifeGeneration[x], new boolean[LIFE_SIZE])) {
+        	   ended = true;
+           } else {
+        	   ended = false;
+        	   break;
+           }
+        }
+        for (int x = 0; x < LIFE_SIZE; x++) {
+           if (Arrays.equals(nextGeneration[x], prevGeneration[x])) {
+        	   stat = true;
+           } else {
+        	   stat = false;
+        	   break;
+           }
+        }
+        for (int x = 0; x < LIFE_SIZE; x++) {
+            if (Arrays.equals(nextGeneration[x], lifeGeneration[x])) {
+         	   cycle = true;
+            } else {
+         	   cycle = false;
+         	   break;
+            }
+         }
+        if (ended || stat || cycle) {
+        	JFrame framix = new JFrame("Sorry");
+        	JOptionPane.showMessageDialog(framix, "Игра закончена. " + 
+        			(ended ? "Все клетки мертвы." : "Сложилась стабильная конфигурация."));
+        	goNextGeneration = !goNextGeneration;
+        	return true;
+        }
+        return false;
+	}
+	
 	private static void processOfLife() {
         for (int x = 0; x < LIFE_SIZE; x++) {
             for (int y = 0; y < LIFE_SIZE; y++) {
@@ -153,12 +201,17 @@ public class GameOfLife {
                 						: nextGeneration[x][y];
             }
         }
-        for (int x = 0; x < LIFE_SIZE; x++) {
-            System.arraycopy(nextGeneration[x], 0, lifeGeneration[x], 0, LIFE_SIZE);
+        if (!endOfGame()) {
+        	for (int x = 0; x < LIFE_SIZE; x++) {
+        		System.arraycopy(lifeGeneration[x], 0, prevGeneration[x], 0, LIFE_SIZE);
+        	}
+        	for (int x = 0; x < LIFE_SIZE; x++) {
+        		System.arraycopy(nextGeneration[x], 0, lifeGeneration[x], 0, LIFE_SIZE);
+        	}
+
+        	++currentGeneration;
+        	curGenerationLabel.setText("Текущее поколение: " 
+        								+ currentGeneration);
         }
-        
-        ++currentGeneration;
-        curGenerationLabel.setText("Текущее поколение: " 
-    								+ currentGeneration);
     }
 }

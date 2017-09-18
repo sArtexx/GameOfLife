@@ -29,7 +29,7 @@ public class GameOfLife {
 	private static boolean[][] lifeGeneration = new boolean[LIFE_SIZE][LIFE_SIZE];
 	private static boolean[][] nextGeneration = new boolean[LIFE_SIZE][LIFE_SIZE];
 	private static boolean goNextGeneration = false;
-	private static int showDelay = 200;
+	private static int showDelay = 500;
 	private static int currentGeneration = 0;
 	private static Canvas canvasPanel;
 	private static JLabel curGenerationLabel = new JLabel("Текущее поколение: " 
@@ -44,9 +44,12 @@ public class GameOfLife {
             super.paint(g);
             for (int x = 0; x < LIFE_SIZE; x++) {
                 for (int y = 0; y < LIFE_SIZE; y++) {
-                    if (lifeGeneration[x][y]) {
-                        g.fillOval(x * POINT_RADIUS, y * POINT_RADIUS, 
-                        		POINT_RADIUS, POINT_RADIUS);
+                	if (lifeGeneration[x][y]) {
+                		int count = countNeighbors(x, y);
+                		g.setColor(((count < 2) || (count > 3)) ? 
+                					Color.gray : 
+                					Color.black);
+                        g.fillOval(x*POINT_RADIUS, y*POINT_RADIUS, POINT_RADIUS, POINT_RADIUS);
                     }
                 }
             }
